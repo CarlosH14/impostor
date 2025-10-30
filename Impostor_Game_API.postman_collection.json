@@ -1,0 +1,325 @@
+{
+	"info": {
+		"_postman_id": "impostor-game-api-collection",
+		"name": "Impostor Game API",
+		"description": "Colección completa de endpoints para el juego del impostor",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "Verifica que el servidor esté funcionando correctamente"
+			},
+			"response": []
+		},
+		{
+			"name": "1. Crear Partida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Guardar game_id y player_id para usar en otras peticiones",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set(\"game_id\", jsonData.game_id);",
+							"    pm.environment.set(\"host_player_id\", jsonData.players[0].player_id);",
+							"    console.log(\"Game ID guardado: \" + jsonData.game_id);",
+							"    console.log(\"Host Player ID guardado: \" + jsonData.players[0].player_id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"player_name\": \"Carlos\",\n  \"max_players\": 8\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/game/create",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"create"
+					]
+				},
+				"description": "Crea una nueva partida. El primer jugador se convierte en el host."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Unirse a Partida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Guardar player_id del segundo jugador",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    var players = jsonData.players;",
+							"    if (players.length > 1) {",
+							"        pm.environment.set(\"player2_id\", players[players.length - 1].player_id);",
+							"        console.log(\"Player 2 ID guardado: \" + players[players.length - 1].player_id);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"player_name\": \"Maria\",\n  \"game_id\": \"{{game_id}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/game/join",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"join"
+					]
+				},
+				"description": "Permite a un jugador unirse a una partida existente usando el game_id"
+			},
+			"response": []
+		},
+		{
+			"name": "2b. Unirse a Partida - Jugador 3",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Guardar player_id del tercer jugador",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    var players = jsonData.players;",
+							"    if (players.length > 2) {",
+							"        pm.environment.set(\"player3_id\", players[players.length - 1].player_id);",
+							"        console.log(\"Player 3 ID guardado: \" + players[players.length - 1].player_id);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"player_name\": \"Juan\",\n  \"game_id\": \"{{game_id}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/game/join",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"join"
+					]
+				},
+				"description": "Tercer jugador se une (necesario para iniciar ronda - mínimo 3 jugadores)"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Iniciar Ronda",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"word\": \"PIZZA\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/game/start-round",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"start-round"
+					]
+				},
+				"description": "Inicia una nueva ronda. Selecciona un impostor aleatorio y asigna palabras a todos los jugadores."
+			},
+			"response": []
+		},
+		{
+			"name": "4. Obtener Palabra - Jugador 1",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"player_id\": \"{{host_player_id}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/game/get-word",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"get-word"
+					]
+				},
+				"description": "Obtiene la palabra asignada al primer jugador. Puede ser la palabra real o 'IMPOSTOR'."
+			},
+			"response": []
+		},
+		{
+			"name": "4b. Obtener Palabra - Jugador 2",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"player_id\": \"{{player2_id}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/game/get-word",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"get-word"
+					]
+				},
+				"description": "Obtiene la palabra asignada al segundo jugador."
+			},
+			"response": []
+		},
+		{
+			"name": "4c. Obtener Palabra - Jugador 3",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"player_id\": \"{{player3_id}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/game/get-word",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"get-word"
+					]
+				},
+				"description": "Obtiene la palabra asignada al tercer jugador."
+			},
+			"response": []
+		},
+		{
+			"name": "5. Obtener Estado de Partida",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/game/{{game_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"{{game_id}}"
+					]
+				},
+				"description": "Obtiene el estado actual de la partida sin revelar información sensible (palabras e impostores)."
+			},
+			"response": []
+		},
+		{
+			"name": "6. Eliminar Partida",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/game/{{game_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"game",
+						"{{game_id}}"
+					]
+				},
+				"description": "Elimina una partida del servidor."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}
