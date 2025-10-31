@@ -206,11 +206,102 @@ revealWordBtn.addEventListener('click', async () => {
             roleTextElement.style.color = '#10b981';
         }
         
+        // Mostrar botones de control si es host
+        if (isHost) {
+            document.getElementById('gameActions').style.display = 'flex';
+        }
+        
     } catch (error) {
         hideLoading();
         showError(error.message);
     }
 });
+
+// Siguiente Ronda
+const nextRoundBtn = document.getElementById('nextRoundBtn');
+if (nextRoundBtn) {
+    nextRoundBtn.addEventListener('click', async () => {
+        if (!confirm('¿Iniciar una nueva ronda? Todos recibirán nuevas palabras.')) {
+            return;
+        }
+        
+        showLoading();
+        
+        try {
+            const response = await fetch(`${API_URL}/game/start-round`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    game_id: gameId
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al iniciar nueva ronda');
+            }
+            
+            hideLoading();
+            
+            // Resetear vista
+            wordReveal.style.display = 'block';
+            wordDisplay.style.display = 'none';
+            
+            // Limpiar pista si existe
+            const hintBox = wordDisplay.querySelector('.hint-box');
+            if (hintBox) {
+                hintBox.remove();
+            }
+            
+            alert('✅ Nueva ronda iniciada. ¡Revela tu nueva palabra!');
+            
+        } catch (error) {
+            hideLoading();
+            showError(error.message);
+        }
+    });
+}
+
+// Finalizar Partida
+const endGameBtn = document.getElementById('endGameBtn');
+if (endGameBtn) {
+    endGameBtn.addEventListener('click', async () => {
+        if (!confirm('¿Estás seguro de que quieres finalizar la partida? Todos los jugadores serán desconectados.')) {
+            return;
+        }
+        
+        showLoading();
+        
+        try {
+            const response = await fetch(`${API_URL}/game/${gameId}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Error al finalizar la partida');
+            }
+            
+            hideLoading();
+            
+            alert('🏁 Partida finalizada. ¡Gracias por jugar!');
+            
+            // Limpiar localStorage
+            localStorage.removeItem('gameId');
+            localStorage.removeItem('playerId');
+            localStorage.removeItem('playerName');
+            localStorage.removeItem('isHost');
+            
+            // Redirigir al inicio
+            window.location.href = '/';
+            
+        } catch (error) {
+            hideLoading();
+            showError(error.message);
+        }
+    });
+}
 
 // Salir del juego
 leaveGameBtn.addEventListener('click', () => {

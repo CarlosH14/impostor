@@ -448,6 +448,18 @@ footer {
     font-size: 1.1rem;
 }
 
+/* Game Actions */
+.game-actions {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid var(--border);
+}
+
+.game-actions button {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
 /* Words Management */
 .words-list {
     display: grid;
