@@ -12,11 +12,18 @@ DATABASE_NAME = os.getenv("DATABASE_NAME", "impostor_game")
 # Cliente de MongoDB
 client = None
 database = None
+_connection_attempted = False
 
 
 async def connect_to_mongo():
     """Conectar a MongoDB"""
-    global client, database
+    global client, database, _connection_attempted
+    
+    # Si ya se intentó conectar, no volver a intentar
+    if _connection_attempted:
+        return
+    
+    _connection_attempted = True
     
     # Si no hay URL configurada, usar modo sin base de datos
     if not MONGODB_URL or MONGODB_URL == "mongodb://localhost:27017" or "<db_username>" in MONGODB_URL:
@@ -24,7 +31,8 @@ async def connect_to_mongo():
         return
     
     try:
-        client = AsyncIOMotorClient(MONGODB_URL, server_api=ServerApi('1'))
+        print(f"🔄 Intentando conectar a MongoDB...")
+        client = AsyncIOMotorClient(MONGODB_URL, server_api=ServerApi('1'), serverSelectionTimeoutMS=5000)
         database = client[DATABASE_NAME]
         # Verificar conexión
         await client.admin.command('ping')
@@ -44,6 +52,12 @@ async def close_mongo_connection():
         print("✅ Conexión a MongoDB cerrada")
 
 
-def get_database():
-    """Obtener instancia de la base de datos"""
+async def get_database():
+    """Obtener instancia de la base de datos (con conexión lazy)"""
+    global database, client
+    
+    # Si no hay cliente o database, intentar conectar
+    if database is None and not _connection_attempted:
+        await connect_to_mongo()
+    
     return database

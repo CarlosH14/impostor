@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
 import random
+import string
 from typing import Dict
 from models import (
     Player,
@@ -21,6 +22,17 @@ app = FastAPI(title="Impostor Game API", version="1.0.0")
 
 # Almacenamiento en memoria (fallback cuando MongoDB no está disponible)
 games_memory: Dict[str, dict] = {}
+
+
+def generate_game_code(length: int = 6) -> str:
+    """
+    Genera un código de partida corto y fácil de compartir.
+    Usa solo letras mayúsculas y números, evitando caracteres ambiguos (0, O, 1, I).
+    """
+    chars = string.ascii_uppercase + string.digits
+    # Eliminar caracteres ambiguos
+    chars = chars.replace('0', '').replace('O', '').replace('1', '').replace('I', '')
+    return ''.join(random.choices(chars, k=length))
 
 # Configurar CORS
 app.add_middleware(
@@ -54,8 +66,19 @@ async def create_game(request: CreateGameRequest):
     """
     Crea una nueva partida y añade al primer jugador (host).
     """
-    db = get_database()
-    game_id = str(uuid.uuid4())
+    db = await get_database()
+    
+    # Generar código único de partida
+    game_id = generate_game_code()
+    
+    # Verificar que el código no exista (aunque es muy improbable)
+    if db:
+        while await db.games.find_one({"game_id": game_id}):
+            game_id = generate_game_code()
+    else:
+        while game_id in games_memory:
+            game_id = generate_game_code()
+    
     player_id = str(uuid.uuid4())
     
     player = Player(
@@ -92,7 +115,7 @@ async def join_game(request: JoinGameRequest):
     """
     Permite a un jugador unirse a una partida existente.
     """
-    db = get_database()
+    db = await get_database()
     
     # Buscar en MongoDB o memoria
     if db:
@@ -148,7 +171,7 @@ async def start_round(request: StartRoundRequest):
     y asignando palabras a todos los jugadores.
     Siempre usa una palabra aleatoria de la base de datos.
     """
-    db = get_database()
+    db = await get_database()
     
     # Buscar en MongoDB o memoria
     if db:
@@ -231,7 +254,7 @@ async def get_word(request: GetWordRequest):
     Obtiene la palabra asignada a un jugador específico.
     Si es impostor, también recibe la pista.
     """
-    db = get_database()
+    db = await get_database()
     
     # Buscar en MongoDB o memoria
     if db:
@@ -268,7 +291,7 @@ async def get_game(game_id: str):
     """
     Obtiene el estado actual de una partida.
     """
-    db = get_database()
+    db = await get_database()
     
     # Buscar en MongoDB o memoria
     if db:
@@ -301,7 +324,7 @@ async def delete_game(game_id: str):
     """
     Elimina una partida.
     """
-    db = get_database()
+    db = await get_database()
     
     # Eliminar de MongoDB o memoria
     if db:
@@ -323,7 +346,7 @@ async def create_word(request: CreateWordRequest):
     """
     Crea una nueva palabra en la base de datos.
     """
-    db = get_database()
+    db = await get_database()
     
     if not db:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
@@ -347,7 +370,7 @@ async def get_all_words():
     """
     Obtiene todas las palabras disponibles.
     """
-    db = get_database()
+    db = await get_database()
     
     if not db:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
@@ -362,7 +385,7 @@ async def get_random_word():
     """
     Obtiene una palabra aleatoria de la base de datos.
     """
-    db = get_database()
+    db = await get_database()
     
     if not db:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
@@ -383,7 +406,7 @@ async def delete_word(word_id: str):
     """
     Elimina una palabra de la base de datos.
     """
-    db = get_database()
+    db = await get_database()
     
     if not db:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
