@@ -73,7 +73,7 @@ async def health_check():
     if db is not None:
         try:
             # Intentar hacer ping a MongoDB
-            await db.client.admin.command('ping')
+            db.client.admin.command('ping')
             mongodb_status = "connected"
         except Exception as e:
             mongodb_status = "error"
@@ -104,7 +104,7 @@ async def create_game(request: CreateGameRequest):
         
         # Verificar que el código no exista (aunque es muy improbable)
         if db is not None:
-            while await db.games.find_one({"game_id": game_id}):
+            while db.games.find_one({"game_id": game_id}):
                 game_id = generate_game_code()
                 print(f"🔄 Código duplicado, generando nuevo: {game_id}")
         else:
@@ -131,7 +131,7 @@ async def create_game(request: CreateGameRequest):
         
         # Usar MongoDB si está disponible, sino memoria
         if db is not None:
-            await db.games.insert_one(game)
+            db.games.insert_one(game)
             print(f"✅ Partida {game_id} guardada en MongoDB")
         else:
             games_memory[game_id] = game
@@ -159,7 +159,7 @@ async def join_game(request: JoinGameRequest):
     
     # Buscar en MongoDB o memoria
     if db is not None:
-        game = await db.games.find_one({"game_id": request.game_id})
+        game = db.games.find_one({"game_id": request.game_id})
     else:
         game = games_memory.get(request.game_id)
     
@@ -185,11 +185,11 @@ async def join_game(request: JoinGameRequest):
     
     # Actualizar en la base de datos o memoria
     if db is not None:
-        await db.games.update_one(
+        db.games.update_one(
             {"game_id": request.game_id},
             {"$push": {"players": player.model_dump()}}
         )
-        game = await db.games.find_one({"game_id": request.game_id})
+        game = db.games.find_one({"game_id": request.game_id})
     else:
         game["players"].append(player.model_dump())
         games_memory[request.game_id] = game
@@ -215,7 +215,7 @@ async def start_round(request: StartRoundRequest):
     
     # Buscar en MongoDB o memoria
     if db is not None:
-        game = await db.games.find_one({"game_id": request.game_id})
+        game = db.games.find_one({"game_id": request.game_id})
     else:
         game = games_memory.get(request.game_id)
     
@@ -230,7 +230,7 @@ async def start_round(request: StartRoundRequest):
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
     
     pipeline = [{"$sample": {"size": 1}}]
-    words = await db.words.aggregate(pipeline).to_list(length=1)
+    words = list(db.words.aggregate(pipeline))
     
     if not words:
         raise HTTPException(status_code=404, detail="No hay palabras disponibles en la base de datos. Por favor agrega palabras primero.")
@@ -259,7 +259,7 @@ async def start_round(request: StartRoundRequest):
     
     # Actualizar en la base de datos o memoria
     if db is not None:
-        await db.games.update_one(
+        db.games.update_one(
             {"game_id": request.game_id},
             {
                 "$set": {
@@ -298,7 +298,7 @@ async def get_word(request: GetWordRequest):
     
     # Buscar en MongoDB o memoria
     if db is not None:
-        game = await db.games.find_one({"game_id": request.game_id})
+        game = db.games.find_one({"game_id": request.game_id})
     else:
         game = games_memory.get(request.game_id)
     
@@ -335,7 +335,7 @@ async def get_game(game_id: str):
     
     # Buscar en MongoDB o memoria
     if db is not None:
-        game = await db.games.find_one({"game_id": game_id})
+        game = db.games.find_one({"game_id": game_id})
     else:
         game = games_memory.get(game_id)
     
@@ -368,7 +368,7 @@ async def delete_game(game_id: str):
     
     # Eliminar de MongoDB o memoria
     if db is not None:
-        result = await db.games.delete_one({"game_id": game_id})
+        result = db.games.delete_one({"game_id": game_id})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Partida no encontrada")
     else:
@@ -400,7 +400,7 @@ async def create_word(request: CreateWordRequest):
         "difficulty": request.difficulty or "medium"
     }
     
-    await db.words.insert_one(word_data)
+    db.words.insert_one(word_data)
     
     return WordResponse(**word_data)
 
@@ -415,7 +415,7 @@ async def get_all_words():
     if db is None:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
     
-    words = await db.words.find().to_list(length=1000)
+    words = list(db.words.find().limit(1000))
     
     return [WordResponse(**{k: v for k, v in w.items() if k != "_id"}) for w in words]
 
@@ -432,7 +432,7 @@ async def get_random_word():
     
     # Obtener una palabra aleatoria usando agregación
     pipeline = [{"$sample": {"size": 1}}]
-    words = await db.words.aggregate(pipeline).to_list(length=1)
+    words = list(db.words.aggregate(pipeline))
     
     if not words:
         raise HTTPException(status_code=404, detail="No hay palabras disponibles")
@@ -451,7 +451,7 @@ async def delete_word(word_id: str):
     if db is None:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
     
-    result = await db.words.delete_one({"word_id": word_id})
+    result = db.words.delete_one({"word_id": word_id})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Palabra no encontrada")
