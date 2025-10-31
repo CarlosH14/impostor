@@ -1,4 +1,4 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 import os
 from dotenv import load_dotenv
@@ -9,55 +9,67 @@ load_dotenv()
 MONGODB_URL = os.getenv("MONGODB_URL", "")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "impostor_game")
 
-# Cliente de MongoDB
-client = None
-database = None
+# Cliente sincrónico para entornos serverless
+_client = None
 _connection_attempted = False
 
 
-async def connect_to_mongo():
-    """Conectar a MongoDB"""
-    global client, database, _connection_attempted
+def get_mongo_client():
+    """Obtener cliente de MongoDB (sincrónico, mejor para serverless)"""
+    global _client, _connection_attempted
     
-    # Si ya se intentó conectar, no volver a intentar
-    if _connection_attempted:
-        return
+    # Si no hay URL configurada
+    if not MONGODB_URL or "<db_username>" in MONGODB_URL:
+        return None
+    
+    # Si ya existe cliente, reutilizarlo
+    if _client is not None:
+        return _client
+    
+    # Si ya intentamos conectar y falló
+    if _connection_attempted and _client is None:
+        return None
     
     _connection_attempted = True
     
-    # Si no hay URL configurada, usar modo sin base de datos
-    if not MONGODB_URL or MONGODB_URL == "mongodb://localhost:27017" or "<db_username>" in MONGODB_URL:
-        print("⚠️ MongoDB no configurado. La app funcionará en modo local (sin persistencia).")
-        return
-    
     try:
-        print(f"🔄 Intentando conectar a MongoDB...")
-        client = AsyncIOMotorClient(MONGODB_URL, server_api=ServerApi('1'), serverSelectionTimeoutMS=5000)
-        database = client[DATABASE_NAME]
+        print(f"🔄 Conectando a MongoDB (sincrónico)...")
+        _client = MongoClient(
+            MONGODB_URL,
+            server_api=ServerApi('1'),
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+            socketTimeoutMS=5000,
+            maxPoolSize=1  # Pool pequeño para serverless
+        )
         # Verificar conexión
-        await client.admin.command('ping')
+        _client.admin.command('ping')
         print("✅ Conectado exitosamente a MongoDB!")
+        return _client
     except Exception as e:
         print(f"⚠️ No se pudo conectar a MongoDB: {e}")
-        print("⚠️ La app funcionará en modo local (sin persistencia).")
-        client = None
-        database = None
+        _client = None
+        return None
+
+
+async def connect_to_mongo():
+    """Conectar a MongoDB (compatibilidad con eventos de FastAPI)"""
+    get_mongo_client()
 
 
 async def close_mongo_connection():
     """Cerrar conexión a MongoDB"""
-    global client
-    if client:
-        client.close()
+    global _client
+    if _client:
+        _client.close()
         print("✅ Conexión a MongoDB cerrada")
 
 
 async def get_database():
-    """Obtener instancia de la base de datos (con conexión lazy)"""
-    global database, client
+    """Obtener instancia de la base de datos"""
+    client = get_mongo_client()
     
-    # Si no hay cliente o database, intentar conectar
-    if database is None and not _connection_attempted:
-        await connect_to_mongo()
+    if client is None:
+        return None
     
-    return database
+    return client[DATABASE_NAME]
