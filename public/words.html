@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Palabras 📚</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Gestión de Palabras</h1>
+            <p class="subtitle">Administra las palabras para el juego</p>
+        </header>
+
+        <!-- Formulario para agregar palabra -->
+        <div class="card">
+            <h2>➕ Agregar Nueva Palabra</h2>
+            <form id="addWordForm">
+                <div class="form-group">
+                    <label for="word">Palabra</label>
+                    <input type="text" id="word" placeholder="Ej: PIZZA, GATO, PLAYA..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hint">Pista para el impostor</label>
+                    <input type="text" id="hint" placeholder="Ej: Es un alimento italiano..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Categoría (opcional)</label>
+                    <input type="text" id="category" placeholder="Ej: Comida, Animales, Lugares...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="difficulty">Dificultad</label>
+                    <select id="difficulty">
+                        <option value="easy">Fácil</option>
+                        <option value="medium" selected>Media</option>
+                        <option value="hard">Difícil</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Agregar Palabra</button>
+            </form>
+        </div>
+
+        <!-- Lista de palabras -->
+        <div class="card">
+            <h2>📋 Palabras Disponibles</h2>
+            <div id="wordsCount" class="info-text" style="margin-bottom: 20px;">
+                Cargando palabras...
+            </div>
+            <div id="wordsList" class="words-list">
+                <!-- Las palabras se agregarán dinámicamente -->
+            </div>
+        </div>
+
+        <footer style="text-align: center;">
+            <a href="/" class="btn btn-secondary">← Volver al Inicio</a>
+        </footer>
+    </div>
+
+    <!-- Modal de Carga -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="loader"></div>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <script src="words.js"></script>
+</body>
+</html>
