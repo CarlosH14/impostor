@@ -54,11 +54,15 @@ createGameForm.addEventListener('submit', async (e) => {
         if (!response.ok) {
             let errorMsg = 'Error al crear la partida';
             try {
-                const error = await response.json();
-                errorMsg = error.detail || errorMsg;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const error = await response.json();
+                    errorMsg = error.detail || errorMsg;
+                } else {
+                    errorMsg = await response.text() || errorMsg;
+                }
             } catch (e) {
-                // Si no es JSON, usar texto plano
-                errorMsg = await response.text() || errorMsg;
+                errorMsg = `Error ${response.status}: ${response.statusText}`;
             }
             throw new Error(errorMsg);
         }
@@ -109,11 +113,15 @@ joinGameForm.addEventListener('submit', async (e) => {
         if (!response.ok) {
             let errorMsg = 'Error al unirse a la partida';
             try {
-                const error = await response.json();
-                errorMsg = error.detail || errorMsg;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const error = await response.json();
+                    errorMsg = error.detail || errorMsg;
+                } else {
+                    errorMsg = await response.text() || errorMsg;
+                }
             } catch (e) {
-                // Si no es JSON, usar texto plano
-                errorMsg = await response.text() || errorMsg;
+                errorMsg = `Error ${response.status}: ${response.statusText}`;
             }
             throw new Error(errorMsg);
         }
