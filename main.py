@@ -11,10 +11,11 @@ from models import (
     StartRoundRequest,
     GetWordRequest,
     GameResponse,
-    PlayerWordResponse
+    PlayerWordResponse,
+    CreateWordRequest,
+    WordResponse
 )
 from database import connect_to_mongo, close_mongo_connection, get_database
-from whatsapp_service import send_word_via_whatsapp
 
 app = FastAPI(title="Impostor Game API", version="1.0.0")
 
@@ -60,7 +61,6 @@ async def create_game(request: CreateGameRequest):
     player = Player(
         player_id=player_id,
         name=request.player_name,
-        phone_number=request.phone_number,
         is_impostor=False
     )
     
@@ -117,7 +117,6 @@ async def join_game(request: JoinGameRequest):
     player = Player(
         player_id=player_id,
         name=request.player_name,
-        phone_number=request.phone_number,
         is_impostor=False
     )
     
@@ -147,6 +146,7 @@ async def start_round(request: StartRoundRequest):
     """
     Inicia una nueva ronda seleccionando aleatoriamente un impostor
     y asignando palabras a todos los jugadores.
+    Siempre usa una palabra aleatoria de la base de datos.
     """
     db = get_database()
     
@@ -162,33 +162,37 @@ async def start_round(request: StartRoundRequest):
     if len(game["players"]) < 3:
         raise HTTPException(status_code=400, detail="Se necesitan al menos 3 jugadores")
     
+    # Obtener palabra aleatoria de la base de datos
+    if not db:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    pipeline = [{"$sample": {"size": 1}}]
+    words = await db.words.aggregate(pipeline).to_list(length=1)
+    
+    if not words:
+        raise HTTPException(status_code=404, detail="No hay palabras disponibles en la base de datos. Por favor agrega palabras primero.")
+    
+    word_data = words[0]
+    word = word_data["word"]
+    hint = word_data["hint"]
+    
     # Seleccionar impostor aleatoriamente
     impostor = random.choice(game["players"])
     impostor_id = impostor["player_id"]
     
-    # Asignar palabras a los jugadores y enviar por WhatsApp
+    # Asignar palabras a los jugadores
     updated_players = []
-    whatsapp_sent_count = 0
     
     for player in game["players"]:
         if player["player_id"] == impostor_id:
             player["word"] = "IMPOSTOR"
             player["is_impostor"] = True
+            player["hint"] = hint  # Guardar pista para el impostor
         else:
-            player["word"] = request.word
+            player["word"] = word
             player["is_impostor"] = False
+            player["hint"] = None
         updated_players.append(player)
-        
-        # Enviar palabra por WhatsApp si tiene número
-        if player.get("phone_number"):
-            success = await send_word_via_whatsapp(
-                phone_number=player["phone_number"],
-                player_name=player["name"],
-                word=player["word"],
-                is_impostor=player["is_impostor"]
-            )
-            if success:
-                whatsapp_sent_count += 1
     
     # Actualizar en la base de datos o memoria
     if db:
@@ -197,24 +201,27 @@ async def start_round(request: StartRoundRequest):
             {
                 "$set": {
                     "status": GameStatus.IN_PROGRESS,
-                    "current_word": request.word,
+                    "current_word": word,
                     "impostor_id": impostor_id,
-                    "players": updated_players
+                    "players": updated_players,
+                    "hint": hint
                 }
             }
         )
     else:
         game["status"] = GameStatus.IN_PROGRESS
-        game["current_word"] = request.word
+        game["current_word"] = word
         game["impostor_id"] = impostor_id
         game["players"] = updated_players
+        game["hint"] = hint
         games_memory[request.game_id] = game
     
     return {
         "message": "Ronda iniciada",
         "game_id": request.game_id,
         "players_count": len(updated_players),
-        "whatsapp_sent": whatsapp_sent_count
+        "word_used": word,
+        "has_hint": True
     }
 
 
@@ -222,6 +229,7 @@ async def start_round(request: StartRoundRequest):
 async def get_word(request: GetWordRequest):
     """
     Obtiene la palabra asignada a un jugador específico.
+    Si es impostor, también recibe la pista.
     """
     db = get_database()
     
@@ -243,11 +251,15 @@ async def get_word(request: GetWordRequest):
     if not player:
         raise HTTPException(status_code=404, detail="Jugador no encontrado")
     
+    # Incluir pista solo si es impostor
+    hint = player.get("hint") if player["is_impostor"] else None
+    
     return PlayerWordResponse(
         player_id=player["player_id"],
         player_name=player["name"],
         word=player["word"],
-        is_impostor=player["is_impostor"]
+        is_impostor=player["is_impostor"],
+        hint=hint
     )
 
 
@@ -302,6 +314,86 @@ async def delete_game(game_id: str):
         del games_memory[game_id]
     
     return {"message": "Partida eliminada", "game_id": game_id}
+
+
+# ============= ENDPOINTS DE PALABRAS =============
+
+@app.post("/words", response_model=WordResponse)
+async def create_word(request: CreateWordRequest):
+    """
+    Crea una nueva palabra en la base de datos.
+    """
+    db = get_database()
+    
+    if not db:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    word_id = str(uuid.uuid4())
+    word_data = {
+        "word_id": word_id,
+        "word": request.word,
+        "hint": request.hint,
+        "category": request.category,
+        "difficulty": request.difficulty or "medium"
+    }
+    
+    await db.words.insert_one(word_data)
+    
+    return WordResponse(**word_data)
+
+
+@app.get("/words", response_model=list[WordResponse])
+async def get_all_words():
+    """
+    Obtiene todas las palabras disponibles.
+    """
+    db = get_database()
+    
+    if not db:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    words = await db.words.find().to_list(length=1000)
+    
+    return [WordResponse(**{k: v for k, v in w.items() if k != "_id"}) for w in words]
+
+
+@app.get("/words/random", response_model=WordResponse)
+async def get_random_word():
+    """
+    Obtiene una palabra aleatoria de la base de datos.
+    """
+    db = get_database()
+    
+    if not db:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    # Obtener una palabra aleatoria usando agregación
+    pipeline = [{"$sample": {"size": 1}}]
+    words = await db.words.aggregate(pipeline).to_list(length=1)
+    
+    if not words:
+        raise HTTPException(status_code=404, detail="No hay palabras disponibles")
+    
+    word = words[0]
+    return WordResponse(**{k: v for k, v in word.items() if k != "_id"})
+
+
+@app.delete("/words/{word_id}")
+async def delete_word(word_id: str):
+    """
+    Elimina una palabra de la base de datos.
+    """
+    db = get_database()
+    
+    if not db:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
+    result = await db.words.delete_one({"word_id": word_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Palabra no encontrada")
+    
+    return {"message": "Palabra eliminada", "word_id": word_id}
 
 
 if __name__ == "__main__":

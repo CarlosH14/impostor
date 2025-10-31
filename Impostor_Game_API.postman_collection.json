@@ -54,7 +54,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"player_name\": \"Carlos\",\n  \"phone_number\": \"+525512345678\",\n  \"max_players\": 8\n}"
+					"raw": "{\n  \"player_name\": \"Carlos\",\n  \"max_players\": 8\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/game/create",
@@ -101,7 +101,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"player_name\": \"Maria\",\n  \"phone_number\": \"+525587654321\",\n  \"game_id\": \"{{game_id}}\"\n}"
+					"raw": "{\n  \"player_name\": \"Maria\",\n  \"game_id\": \"{{game_id}}\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/game/join",
@@ -148,7 +148,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"player_name\": \"Juan\",\n  \"phone_number\": \"+525598765432\",\n  \"game_id\": \"{{game_id}}\"\n}"
+					"raw": "{\n  \"player_name\": \"Juan\",\n  \"game_id\": \"{{game_id}}\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/game/join",

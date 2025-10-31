@@ -12,26 +12,22 @@ class GameStatus(str, Enum):
 class Player(BaseModel):
     player_id: str
     name: str
-    phone_number: Optional[str] = None  # Formato: +52XXXXXXXXXX
     word: Optional[str] = None
     is_impostor: bool = False
 
 
 class CreateGameRequest(BaseModel):
     player_name: str
-    phone_number: Optional[str] = None  # Formato: +52XXXXXXXXXX
     max_players: int = 8
 
 
 class JoinGameRequest(BaseModel):
     player_name: str
-    phone_number: Optional[str] = None  # Formato: +52XXXXXXXXXX
     game_id: str
 
 
 class StartRoundRequest(BaseModel):
     game_id: str
-    word: str
 
 
 class GetWordRequest(BaseModel):
@@ -52,3 +48,27 @@ class PlayerWordResponse(BaseModel):
     player_name: str
     word: str
     is_impostor: bool
+    hint: Optional[str] = None  # Pista para el impostor
+
+
+class Word(BaseModel):
+    word_id: Optional[str] = None
+    word: str
+    hint: str  # Pista para ayudar al impostor
+    category: Optional[str] = None
+    difficulty: Optional[str] = "medium"  # easy, medium, hard
+
+
+class CreateWordRequest(BaseModel):
+    word: str
+    hint: str
+    category: Optional[str] = None
+    difficulty: Optional[str] = "medium"
+
+
+class WordResponse(BaseModel):
+    word_id: str
+    word: str
+    hint: str
+    category: Optional[str] = None
+    difficulty: str

@@ -32,7 +32,7 @@ const loadingModal = document.getElementById('loadingModal');
 // Verificar que tengamos los datos necesarios
 if (!gameId || !playerId || !playerName) {
     alert('No se encontró información de la partida. Redirigiendo...');
-    window.location.href = 'index.html';
+    window.location.href = '/';
 }
 
 // Mostrar código de partida
@@ -130,13 +130,6 @@ async function updateGameState() {
 
 // Iniciar ronda
 startRoundBtn.addEventListener('click', async () => {
-    const word = document.getElementById('roundWord').value.trim().toUpperCase();
-    
-    if (!word) {
-        showError('Por favor ingresa una palabra para la ronda');
-        return;
-    }
-    
     showLoading();
     
     try {
@@ -146,8 +139,7 @@ startRoundBtn.addEventListener('click', async () => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                game_id: gameId,
-                word: word
+                game_id: gameId
             })
         });
         
@@ -199,6 +191,16 @@ revealWordBtn.addEventListener('click', async () => {
         if (data.is_impostor) {
             roleTextElement.textContent = '⚠️ ¡Eres el IMPOSTOR! Descubre cuál es la palabra real sin ser descubierto.';
             roleTextElement.style.color = '#ef4444';
+            
+            // Mostrar pista si está disponible
+            if (data.hint) {
+                const hintElement = document.createElement('div');
+                hintElement.className = 'hint-box';
+                hintElement.innerHTML = `
+                    <strong>💡 Pista:</strong> ${data.hint}
+                `;
+                wordDisplay.appendChild(hintElement);
+            }
         } else {
             roleTextElement.textContent = '✓ Eres un jugador normal. Descubre quién es el impostor.';
             roleTextElement.style.color = '#10b981';
@@ -217,7 +219,7 @@ leaveGameBtn.addEventListener('click', () => {
         localStorage.removeItem('playerId');
         localStorage.removeItem('playerName');
         localStorage.removeItem('isHost');
-        window.location.href = 'index.html';
+        window.location.href = '/';
     }
 });
 

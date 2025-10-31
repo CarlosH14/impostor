@@ -30,7 +30,6 @@ createGameForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const name = document.getElementById('hostName').value.trim();
-    const phone = document.getElementById('hostPhone').value.trim();
     const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
     
     if (!name) {
@@ -48,7 +47,6 @@ createGameForm.addEventListener('submit', async (e) => {
             },
             body: JSON.stringify({
                 player_name: name,
-                phone_number: phone || null,
                 max_players: maxPlayers
             })
         });
@@ -67,7 +65,7 @@ createGameForm.addEventListener('submit', async (e) => {
         localStorage.setItem('isHost', 'true');
         
         // Redirigir a la sala de juego
-        window.location.href = 'game.html';
+        window.location.href = '/game.html';
         
     } catch (error) {
         hideLoading();
@@ -80,7 +78,6 @@ joinGameForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const name = document.getElementById('playerName').value.trim();
-    const phone = document.getElementById('playerPhone').value.trim();
     const gameId = document.getElementById('gameId').value.trim();
     
     if (!name || !gameId) {
@@ -98,7 +95,6 @@ joinGameForm.addEventListener('submit', async (e) => {
             },
             body: JSON.stringify({
                 player_name: name,
-                phone_number: phone || null,
                 game_id: gameId
             })
         });
@@ -120,7 +116,7 @@ joinGameForm.addEventListener('submit', async (e) => {
         localStorage.setItem('isHost', 'false');
         
         // Redirigir a la sala de juego
-        window.location.href = 'game.html';
+        window.location.href = '/game.html';
         
     } catch (error) {
         hideLoading();
