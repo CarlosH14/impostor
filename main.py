@@ -95,48 +95,59 @@ async def create_game(request: CreateGameRequest):
     """
     Crea una nueva partida y añade al primer jugador (host).
     """
-    db = await get_database()
-    
-    # Generar código único de partida
-    game_id = generate_game_code()
-    
-    # Verificar que el código no exista (aunque es muy improbable)
-    if db:
-        while await db.games.find_one({"game_id": game_id}):
-            game_id = generate_game_code()
-    else:
-        while game_id in games_memory:
-            game_id = generate_game_code()
-    
-    player_id = str(uuid.uuid4())
-    
-    player = Player(
-        player_id=player_id,
-        name=request.player_name,
-        is_impostor=False
-    )
-    
-    game = {
-        "game_id": game_id,
-        "status": GameStatus.WAITING,
-        "players": [player.model_dump()],
-        "max_players": request.max_players,
-        "current_word": None,
-        "impostor_id": None
-    }
-    
-    # Usar MongoDB si está disponible, sino memoria
-    if db:
-        await db.games.insert_one(game)
-    else:
-        games_memory[game_id] = game
-    
-    return GameResponse(
-        game_id=game_id,
-        status=GameStatus.WAITING,
-        players=[player],
-        max_players=request.max_players
-    )
+    try:
+        db = await get_database()
+        
+        # Generar código único de partida
+        game_id = generate_game_code()
+        print(f"🎮 Generando partida con código: {game_id}")
+        
+        # Verificar que el código no exista (aunque es muy improbable)
+        if db:
+            while await db.games.find_one({"game_id": game_id}):
+                game_id = generate_game_code()
+                print(f"🔄 Código duplicado, generando nuevo: {game_id}")
+        else:
+            while game_id in games_memory:
+                game_id = generate_game_code()
+                print(f"🔄 Código duplicado, generando nuevo: {game_id}")
+        
+        player_id = str(uuid.uuid4())
+        
+        player = Player(
+            player_id=player_id,
+            name=request.player_name,
+            is_impostor=False
+        )
+        
+        game = {
+            "game_id": game_id,
+            "status": GameStatus.WAITING,
+            "players": [player.model_dump()],
+            "max_players": request.max_players,
+            "current_word": None,
+            "impostor_id": None
+        }
+        
+        # Usar MongoDB si está disponible, sino memoria
+        if db:
+            await db.games.insert_one(game)
+            print(f"✅ Partida {game_id} guardada en MongoDB")
+        else:
+            games_memory[game_id] = game
+            print(f"✅ Partida {game_id} guardada en memoria")
+        
+        return GameResponse(
+            game_id=game_id,
+            status=GameStatus.WAITING,
+            players=[player],
+            max_players=request.max_players
+        )
+    except Exception as e:
+        print(f"❌ Error al crear partida: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error al crear partida: {str(e)}")
 
 
 @app.post("/game/join", response_model=GameResponse)
