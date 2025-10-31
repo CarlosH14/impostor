@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de Juego 🎮</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Sala de Juego</h1>
+            <div class="game-code">
+                <span>Código: </span>
+                <strong id="gameCode">-</strong>
+                <button id="copyCodeBtn" class="btn-icon" title="Copiar código">📋</button>
+            </div>
+        </header>
+
+        <!-- Sala de Espera -->
+        <div id="waitingRoom" class="section">
+            <div class="card">
+                <h2>⏳ Esperando Jugadores...</h2>
+                <p class="player-count">
+                    <span id="currentPlayers">0</span> / <span id="maxPlayers">0</span> jugadores
+                </p>
+                
+                <div id="playersList" class="players-list">
+                    <!-- Los jugadores se agregarán dinámicamente -->
+                </div>
+
+                <div class="actions" id="hostActions" style="display: none;">
+                    <div class="form-group">
+                        <label for="roundWord">Palabra para esta ronda</label>
+                        <input type="text" id="roundWord" placeholder="Ej: PIZZA, GATO, PLAYA..." required>
+                    </div>
+                    <button id="startRoundBtn" class="btn btn-primary">Iniciar Ronda 🚀</button>
+                </div>
+
+                <p class="info-text" id="waitingMessage">
+                    Comparte el código con tus amigos para que se unan
+                </p>
+            </div>
+        </div>
+
+        <!-- Juego en Progreso -->
+        <div id="gameInProgress" class="section" style="display: none;">
+            <div class="card">
+                <h2>🎯 Tu Palabra Secreta</h2>
+                
+                <div id="wordReveal" class="word-reveal">
+                    <button id="revealWordBtn" class="btn btn-reveal">
+                        👁️ Ver Mi Palabra
+                    </button>
+                </div>
+
+                <div id="wordDisplay" class="word-display" style="display: none;">
+                    <div class="word-card">
+                        <h3 id="playerWord">CARGANDO...</h3>
+                        <p id="roleText">-</p>
+                    </div>
+                    
+                    <div class="game-instructions">
+                        <h4>📝 Instrucciones:</h4>
+                        <ul id="instructions">
+                            <li>Todos tienen la misma palabra excepto el impostor</li>
+                            <li>El impostor debe adivinar cuál es la palabra real</li>
+                            <li>Los demás deben descubrir quién es el impostor</li>
+                            <li>Hagan preguntas por turnos para descubrirse</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="players-info">
+                    <h4>👥 Jugadores en esta partida:</h4>
+                    <div id="gamePlayersList" class="players-grid">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <button id="newRoundBtn" class="btn btn-secondary" style="display: none;">
+                    Nueva Ronda
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <button id="leaveGameBtn" class="btn btn-danger">Salir del Juego</button>
+        </footer>
+    </div>
+
+    <!-- Modal de Carga -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="loader"></div>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

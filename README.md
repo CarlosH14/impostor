@@ -36,9 +36,12 @@ Crea una nueva partida y añade al primer jugador (host).
 ```json
 {
   "player_name": "Carlos",
+  "phone_number": "+525512345678",
   "max_players": 8
 }
 ```
+
+**Nota**: `phone_number` es opcional. Si se proporciona, se enviará la palabra por WhatsApp.
 
 **Response:**
 ```json
@@ -59,9 +62,12 @@ Permite a un jugador unirse a una partida existente.
 ```json
 {
   "player_name": "Maria",
+  "phone_number": "+525587654321",
   "game_id": "uuid-de-la-partida"
 }
 ```
+
+**Nota**: `phone_number` es opcional. Incluirlo permite recibir la palabra por WhatsApp.
 
 ### 3. Iniciar Ronda
 **POST** `/game/start-round`
@@ -81,9 +87,12 @@ Inicia una ronda seleccionando aleatoriamente un impostor y asignando palabras.
 {
   "message": "Ronda iniciada",
   "game_id": "uuid-de-la-partida",
-  "players_count": 5
+  "players_count": 5,
+  "whatsapp_sent": 4
 }
 ```
+
+**Nota**: `whatsapp_sent` indica cuántos mensajes se enviaron exitosamente por WhatsApp.
 
 ### 4. Obtener Palabra del Jugador
 **POST** `/game/get-word`
@@ -180,9 +189,39 @@ O simplemente haz push a GitHub y Vercel desplegará automáticamente.
 
 Crea un archivo `.env` local (ya está en .gitignore):
 ```bash
+# MongoDB
 MONGODB_URL=mongodb+srv://tu-usuario:tu-password@cluster.mongodb.net/?retryWrites=true&w=majority
 DATABASE_NAME=impostor_game
+
+# Twilio WhatsApp (OPCIONAL)
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=tu_auth_token_aqui
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
 ```
+
+### Configurar WhatsApp con Twilio (OPCIONAL - GRATIS)
+
+Si quieres que las palabras se envíen automáticamente por WhatsApp:
+
+1. **Crear cuenta en Twilio**:
+   - Ve a [twilio.com](https://www.twilio.com/try-twilio) y crea cuenta gratuita
+   - Recibes $15 USD de crédito gratis
+
+2. **Activar WhatsApp Sandbox**:
+   - En el dashboard, ve a "Messaging" → "Try it out" → "Send a WhatsApp message"
+   - Escanea el código QR o envía el código desde tu WhatsApp
+   - Envía el mensaje: `join <tu-codigo>` al número +1 415 523 8886
+
+3. **Obtener credenciales**:
+   - Ve a "Account" → "API keys & tokens"
+   - Copia tu `Account SID` y `Auth Token`
+   - Agrégalos a tu archivo `.env`
+
+4. **Usar en producción** (después del sandbox):
+   - Solicita aprobación del template de mensajes
+   - Usa tu número de Twilio verificado
+
+**Nota**: Si no configuras Twilio, la API funcionará normalmente pero sin enviar WhatsApp.
 
 ## Notas
 

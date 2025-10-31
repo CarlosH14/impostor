@@ -12,17 +12,20 @@ class GameStatus(str, Enum):
 class Player(BaseModel):
     player_id: str
     name: str
+    phone_number: Optional[str] = None  # Formato: +52XXXXXXXXXX
     word: Optional[str] = None
     is_impostor: bool = False
 
 
 class CreateGameRequest(BaseModel):
     player_name: str
+    phone_number: Optional[str] = None  # Formato: +52XXXXXXXXXX
     max_players: int = 8
 
 
 class JoinGameRequest(BaseModel):
     player_name: str
+    phone_number: Optional[str] = None  # Formato: +52XXXXXXXXXX
     game_id: str
 
 

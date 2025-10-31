@@ -14,8 +14,12 @@ from models import (
     PlayerWordResponse
 )
 from database import connect_to_mongo, close_mongo_connection, get_database
+from whatsapp_service import send_word_via_whatsapp
 
 app = FastAPI(title="Impostor Game API", version="1.0.0")
+
+# Almacenamiento en memoria (fallback cuando MongoDB no está disponible)
+games_memory: Dict[str, dict] = {}
 
 # Configurar CORS
 app.add_middleware(
@@ -56,6 +60,7 @@ async def create_game(request: CreateGameRequest):
     player = Player(
         player_id=player_id,
         name=request.player_name,
+        phone_number=request.phone_number,
         is_impostor=False
     )
     
@@ -68,7 +73,11 @@ async def create_game(request: CreateGameRequest):
         "impostor_id": None
     }
     
-    await db.games.insert_one(game)
+    # Usar MongoDB si está disponible, sino memoria
+    if db:
+        await db.games.insert_one(game)
+    else:
+        games_memory[game_id] = game
     
     return GameResponse(
         game_id=game_id,
@@ -84,7 +93,12 @@ async def join_game(request: JoinGameRequest):
     Permite a un jugador unirse a una partida existente.
     """
     db = get_database()
-    game = await db.games.find_one({"game_id": request.game_id})
+    
+    # Buscar en MongoDB o memoria
+    if db:
+        game = await db.games.find_one({"game_id": request.game_id})
+    else:
+        game = games_memory.get(request.game_id)
     
     if not game:
         raise HTTPException(status_code=404, detail="Partida no encontrada")
@@ -103,17 +117,21 @@ async def join_game(request: JoinGameRequest):
     player = Player(
         player_id=player_id,
         name=request.player_name,
+        phone_number=request.phone_number,
         is_impostor=False
     )
     
-    # Actualizar en la base de datos
-    await db.games.update_one(
-        {"game_id": request.game_id},
-        {"$push": {"players": player.model_dump()}}
-    )
+    # Actualizar en la base de datos o memoria
+    if db:
+        await db.games.update_one(
+            {"game_id": request.game_id},
+            {"$push": {"players": player.model_dump()}}
+        )
+        game = await db.games.find_one({"game_id": request.game_id})
+    else:
+        game["players"].append(player.model_dump())
+        games_memory[request.game_id] = game
     
-    # Obtener partida actualizada
-    game = await db.games.find_one({"game_id": request.game_id})
     players = [Player(**p) for p in game["players"]]
     
     return GameResponse(
@@ -131,7 +149,12 @@ async def start_round(request: StartRoundRequest):
     y asignando palabras a todos los jugadores.
     """
     db = get_database()
-    game = await db.games.find_one({"game_id": request.game_id})
+    
+    # Buscar en MongoDB o memoria
+    if db:
+        game = await db.games.find_one({"game_id": request.game_id})
+    else:
+        game = games_memory.get(request.game_id)
     
     if not game:
         raise HTTPException(status_code=404, detail="Partida no encontrada")
@@ -143,8 +166,10 @@ async def start_round(request: StartRoundRequest):
     impostor = random.choice(game["players"])
     impostor_id = impostor["player_id"]
     
-    # Asignar palabras a los jugadores
+    # Asignar palabras a los jugadores y enviar por WhatsApp
     updated_players = []
+    whatsapp_sent_count = 0
+    
     for player in game["players"]:
         if player["player_id"] == impostor_id:
             player["word"] = "IMPOSTOR"
@@ -153,24 +178,43 @@ async def start_round(request: StartRoundRequest):
             player["word"] = request.word
             player["is_impostor"] = False
         updated_players.append(player)
+        
+        # Enviar palabra por WhatsApp si tiene número
+        if player.get("phone_number"):
+            success = await send_word_via_whatsapp(
+                phone_number=player["phone_number"],
+                player_name=player["name"],
+                word=player["word"],
+                is_impostor=player["is_impostor"]
+            )
+            if success:
+                whatsapp_sent_count += 1
     
-    # Actualizar en la base de datos
-    await db.games.update_one(
-        {"game_id": request.game_id},
-        {
-            "$set": {
-                "status": GameStatus.IN_PROGRESS,
-                "current_word": request.word,
-                "impostor_id": impostor_id,
-                "players": updated_players
+    # Actualizar en la base de datos o memoria
+    if db:
+        await db.games.update_one(
+            {"game_id": request.game_id},
+            {
+                "$set": {
+                    "status": GameStatus.IN_PROGRESS,
+                    "current_word": request.word,
+                    "impostor_id": impostor_id,
+                    "players": updated_players
+                }
             }
-        }
-    )
+        )
+    else:
+        game["status"] = GameStatus.IN_PROGRESS
+        game["current_word"] = request.word
+        game["impostor_id"] = impostor_id
+        game["players"] = updated_players
+        games_memory[request.game_id] = game
     
     return {
         "message": "Ronda iniciada",
         "game_id": request.game_id,
-        "players_count": len(updated_players)
+        "players_count": len(updated_players),
+        "whatsapp_sent": whatsapp_sent_count
     }
 
 
@@ -180,7 +224,12 @@ async def get_word(request: GetWordRequest):
     Obtiene la palabra asignada a un jugador específico.
     """
     db = get_database()
-    game = await db.games.find_one({"game_id": request.game_id})
+    
+    # Buscar en MongoDB o memoria
+    if db:
+        game = await db.games.find_one({"game_id": request.game_id})
+    else:
+        game = games_memory.get(request.game_id)
     
     if not game:
         raise HTTPException(status_code=404, detail="Partida no encontrada")
@@ -208,7 +257,12 @@ async def get_game(game_id: str):
     Obtiene el estado actual de una partida.
     """
     db = get_database()
-    game = await db.games.find_one({"game_id": game_id})
+    
+    # Buscar en MongoDB o memoria
+    if db:
+        game = await db.games.find_one({"game_id": game_id})
+    else:
+        game = games_memory.get(game_id)
     
     if not game:
         raise HTTPException(status_code=404, detail="Partida no encontrada")
@@ -236,10 +290,16 @@ async def delete_game(game_id: str):
     Elimina una partida.
     """
     db = get_database()
-    result = await db.games.delete_one({"game_id": game_id})
     
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Partida no encontrada")
+    # Eliminar de MongoDB o memoria
+    if db:
+        result = await db.games.delete_one({"game_id": game_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Partida no encontrada")
+    else:
+        if game_id not in games_memory:
+            raise HTTPException(status_code=404, detail="Partida no encontrada")
+        del games_memory[game_id]
     
     return {"message": "Partida eliminada", "game_id": game_id}
 
