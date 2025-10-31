@@ -52,8 +52,15 @@ createGameForm.addEventListener('submit', async (e) => {
         });
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Error al crear la partida');
+            let errorMsg = 'Error al crear la partida';
+            try {
+                const error = await response.json();
+                errorMsg = error.detail || errorMsg;
+            } catch (e) {
+                // Si no es JSON, usar texto plano
+                errorMsg = await response.text() || errorMsg;
+            }
+            throw new Error(errorMsg);
         }
         
         const data = await response.json();
@@ -100,8 +107,15 @@ joinGameForm.addEventListener('submit', async (e) => {
         });
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Error al unirse a la partida');
+            let errorMsg = 'Error al unirse a la partida';
+            try {
+                const error = await response.json();
+                errorMsg = error.detail || errorMsg;
+            } catch (e) {
+                // Si no es JSON, usar texto plano
+                errorMsg = await response.text() || errorMsg;
+            }
+            throw new Error(errorMsg);
         }
         
         const data = await response.json();

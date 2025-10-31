@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uuid
 import random
 import string
+import os
 from typing import Dict
 from models import (
     Player,
@@ -59,6 +60,34 @@ async def shutdown_event():
 @app.get("/")
 async def root():
     return {"message": "Impostor Game API", "status": "running"}
+
+
+@app.get("/health")
+async def health_check():
+    """Endpoint para verificar el estado de la API y MongoDB"""
+    db = await get_database()
+    
+    mongodb_status = "disconnected"
+    mongodb_error = None
+    
+    if db is not None:
+        try:
+            # Intentar hacer ping a MongoDB
+            await db.client.admin.command('ping')
+            mongodb_status = "connected"
+        except Exception as e:
+            mongodb_status = "error"
+            mongodb_error = str(e)
+    
+    return {
+        "api": "running",
+        "mongodb": mongodb_status,
+        "mongodb_error": mongodb_error,
+        "environment": {
+            "has_mongodb_url": bool(os.getenv("MONGODB_URL")),
+            "has_database_name": bool(os.getenv("DATABASE_NAME"))
+        }
+    }
 
 
 @app.post("/game/create", response_model=GameResponse)
