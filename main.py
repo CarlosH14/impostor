@@ -239,9 +239,13 @@ async def start_round(request: StartRoundRequest):
     word = word_data["word"]
     hint = word_data["hint"]
     
-    # Seleccionar impostor aleatoriamente
-    impostor = random.choice(game["players"])
+    # Seleccionar impostor aleatoriamente (asegurar aleatoriedad)
+    players_list = game["players"].copy()
+    random.shuffle(players_list)  # Mezclar lista para mayor aleatoriedad
+    impostor = random.choice(players_list)
     impostor_id = impostor["player_id"]
+    
+    print(f"🎭 Impostor seleccionado: {impostor['name']} (ID: {impostor_id[:8]}...)")
     
     # Asignar palabras a los jugadores
     updated_players = []
