@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Impostor 🎮</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Juego del Impostor</h1>
+            <p class="subtitle">¿Podrás descubrir quién es el impostor?</p>
+        </header>
+
+        <main class="main-menu">
+            <div class="card">
+                <h2>🎯 Crear Nueva Partida</h2>
+                <form id="createGameForm">
+                    <div class="form-group">
+                        <label for="hostName">Tu Nombre</label>
+                        <input type="text" id="hostName" placeholder="Ingresa tu nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hostPhone">Teléfono (Opcional)</label>
+                        <input type="tel" id="hostPhone" placeholder="+52XXXXXXXXXX">
+                        <small>Para recibir la palabra por WhatsApp</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxPlayers">Jugadores Máximos</label>
+                        <select id="maxPlayers">
+                            <option value="4">4 jugadores</option>
+                            <option value="6">6 jugadores</option>
+                            <option value="8" selected>8 jugadores</option>
+                            <option value="10">10 jugadores</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Partida</button>
+                </form>
+            </div>
+
+            <div class="divider">
+                <span>O</span>
+            </div>
+
+            <div class="card">
+                <h2>🚪 Unirse a Partida</h2>
+                <form id="joinGameForm">
+                    <div class="form-group">
+                        <label for="playerName">Tu Nombre</label>
+                        <input type="text" id="playerName" placeholder="Ingresa tu nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="playerPhone">Teléfono (Opcional)</label>
+                        <input type="tel" id="playerPhone" placeholder="+52XXXXXXXXXX">
+                        <small>Para recibir la palabra por WhatsApp</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="gameId">Código de Partida</label>
+                        <input type="text" id="gameId" placeholder="Pega el código aquí" required>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">Unirse</button>
+                </form>
+            </div>
+        </main>
+
+        <footer>
+            <p>Mínimo 3 jugadores para iniciar • Desarrollado con ❤️</p>
+        </footer>
+    </div>
+
+    <!-- Modal de Carga -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="loader"></div>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
