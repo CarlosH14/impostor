@@ -41,6 +41,7 @@ class GameResponse(BaseModel):
     players: List[Player]
     max_players: int
     current_word: Optional[str] = None
+    round_number: int = 0
 
 
 class PlayerWordResponse(BaseModel):

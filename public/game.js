@@ -9,6 +9,7 @@ let playerId = localStorage.getItem('playerId');
 let playerName = localStorage.getItem('playerName');
 let isHost = localStorage.getItem('isHost') === 'true';
 let updateInterval;
+let currentRoundNumber = 0; // Trackear el número de ronda actual
 
 // Elementos del DOM
 const gameCodeElement = document.getElementById('gameCode');
@@ -58,6 +59,28 @@ function showError(message) {
     alert('❌ Error: ' + message);
 }
 
+// Manejar nueva ronda
+function handleNewRound() {
+    console.log('🔄 Reseteando vista para nueva ronda...');
+    
+    // Resetear vista de palabra
+    wordReveal.style.display = 'block';
+    wordDisplay.style.display = 'none';
+    
+    // Limpiar contenido previo
+    playerWordElement.textContent = '';
+    roleTextElement.textContent = '';
+    
+    // Limpiar pista si existe
+    const hintBox = wordDisplay.querySelector('.hint-box');
+    if (hintBox) {
+        hintBox.remove();
+    }
+    
+    // Mostrar notificación al jugador
+    alert('🎲 ¡Nueva ronda iniciada! Presiona el botón para revelar tu nueva palabra.');
+}
+
 // Actualizar estado del juego
 async function updateGameState() {
     try {
@@ -68,6 +91,13 @@ async function updateGameState() {
         }
         
         const game = await response.json();
+        
+        // Detectar cambio de ronda
+        if (game.round_number > currentRoundNumber && currentRoundNumber > 0) {
+            console.log(`🔄 Nueva ronda detectada: ${currentRoundNumber} -> ${game.round_number}`);
+            handleNewRound();
+        }
+        currentRoundNumber = game.round_number;
         
         // Actualizar contador de jugadores
         currentPlayersElement.textContent = game.players.length;
@@ -245,17 +275,8 @@ if (nextRoundBtn) {
             
             hideLoading();
             
-            // Resetear vista
-            wordReveal.style.display = 'block';
-            wordDisplay.style.display = 'none';
-            
-            // Limpiar pista si existe
-            const hintBox = wordDisplay.querySelector('.hint-box');
-            if (hintBox) {
-                hintBox.remove();
-            }
-            
-            alert('✅ Nueva ronda iniciada. ¡Revela tu nueva palabra!');
+            // El reset se manejará automáticamente cuando se detecte el cambio de round_number
+            // en updateGameState()
             
         } catch (error) {
             hideLoading();

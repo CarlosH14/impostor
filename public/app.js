@@ -8,6 +8,25 @@ const createGameForm = document.getElementById('createGameForm');
 const joinGameForm = document.getElementById('joinGameForm');
 const loadingModal = document.getElementById('loadingModal');
 
+// Selector de jugadores personalizado
+const playerOptions = document.querySelectorAll('.player-option');
+const maxPlayersInput = document.getElementById('maxPlayers');
+
+playerOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Remover clase active de todos
+        playerOptions.forEach(opt => opt.classList.remove('active'));
+        
+        // Agregar clase active al seleccionado
+        option.classList.add('active');
+        
+        // Actualizar el input hidden
+        maxPlayersInput.value = option.dataset.value;
+    });
+});
+
 // Funciones de utilidad
 function showLoading() {
     loadingModal.classList.add('active');

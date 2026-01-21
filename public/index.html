@@ -7,61 +7,164 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Elementos decorativos de fondo -->
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
     <div class="container">
-        <header>
-            <h1>🎮 Juego del Impostor</h1>
-            <p class="subtitle">¿Podrás descubrir quién es el impostor?</p>
+        <!-- Header mejorado -->
+        <header class="home-header">
+            <div class="logo-container">
+                <div class="logo-icon">🎭</div>
+                <div class="logo-text">
+                    <h1>Juego del Impostor</h1>
+                    <p class="subtitle">¿Podrás descubrir quién es el impostor?</p>
+                </div>
+            </div>
+            
+            <!-- Estadísticas/Info rápida -->
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <span class="stat-number">3-10</span>
+                        <span class="stat-label">Jugadores</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">⏱️</div>
+                    <div class="stat-info">
+                        <span class="stat-number">5-10</span>
+                        <span class="stat-label">Minutos</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">🎲</div>
+                    <div class="stat-info">
+                        <span class="stat-number">∞</span>
+                        <span class="stat-label">Rondas</span>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <main class="main-menu">
-            <div class="card">
-                <h2>🎯 Crear Nueva Partida</h2>
+            <!-- Cards mejoradas con iconos más grandes -->
+            <div class="card game-mode-card">
+                <div class="card-icon">🎯</div>
+                <h2>Crear Nueva Partida</h2>
+                <p class="card-description">Inicia una nueva sesión y comparte el código con tus amigos</p>
                 <form id="createGameForm">
                     <div class="form-group">
-                        <label for="hostName">Tu Nombre</label>
-                        <input type="text" id="hostName" placeholder="Ingresa tu nombre" required>
+                        <label for="hostName">
+                            <span class="label-icon">👤</span>
+                            Tu Nombre
+                        </label>
+                        <input type="text" id="hostName" placeholder="Ej: Carlitos" required maxlength="20">
                     </div>
 
                     <div class="form-group">
-                        <label for="maxPlayers">Jugadores Máximos</label>
-                        <select id="maxPlayers">
-                            <option value="4">4 jugadores</option>
-                            <option value="6">6 jugadores</option>
-                            <option value="8" selected>8 jugadores</option>
-                            <option value="10">10 jugadores</option>
-                        </select>
+                        <label for="maxPlayers">
+                            <span class="label-icon">👥</span>
+                            Jugadores Máximos
+                        </label>
+                        <div class="player-selector">
+                            <button type="button" class="player-option" data-value="4">4</button>
+                            <button type="button" class="player-option" data-value="6">6</button>
+                            <button type="button" class="player-option active" data-value="8">8</button>
+                            <button type="button" class="player-option" data-value="10">10</button>
+                        </div>
+                        <input type="hidden" id="maxPlayers" value="8">
                     </div>
-                    <button type="submit" class="btn btn-primary">Crear Partida</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span>🚀</span> Crear Partida
+                    </button>
                 </form>
             </div>
 
-            <div class="divider">
+            <div class="divider-modern">
                 <span>O</span>
             </div>
 
-            <div class="card">
-                <h2>🚪 Unirse a Partida</h2>
+            <div class="card game-mode-card">
+                <div class="card-icon">🚪</div>
+                <h2>Unirse a Partida</h2>
+                <p class="card-description">¿Ya tienes un código? Únete a la diversión</p>
                 <form id="joinGameForm">
                     <div class="form-group">
-                        <label for="playerName">Tu Nombre</label>
-                        <input type="text" id="playerName" placeholder="Ingresa tu nombre" required>
+                        <label for="playerName">
+                            <span class="label-icon">👤</span>
+                            Tu Nombre
+                        </label>
+                        <input type="text" id="playerName" placeholder="Ej: Ana" required maxlength="20">
                     </div>
 
                     <div class="form-group">
-                        <label for="gameId">Código de Partida</label>
-                        <input type="text" id="gameId" placeholder="Pega el código aquí" required>
+                        <label for="gameId">
+                            <span class="label-icon">🔑</span>
+                            Código de Partida
+                        </label>
+                        <input 
+                            type="text" 
+                            id="gameId" 
+                            placeholder="Ej: ABC123" 
+                            required
+                            style="text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
                     </div>
-                    <button type="submit" class="btn btn-secondary">Unirse</button>
+                    <button type="submit" class="btn btn-secondary">
+                        <span>🎮</span> Unirse Ahora
+                    </button>
                 </form>
             </div>
         </main>
 
+        <!-- Sección de Cómo Jugar -->
+        <div class="how-to-play">
+            <h3>📖 ¿Cómo se juega?</h3>
+            <div class="rules-grid">
+                <div class="rule-item">
+                    <div class="rule-number">1</div>
+                    <div class="rule-content">
+                        <h4>Recibe tu palabra</h4>
+                        <p>Todos reciben la misma palabra, excepto el impostor</p>
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <div class="rule-number">2</div>
+                    <div class="rule-content">
+                        <h4>Describe sin revelar</h4>
+                        <p>Por turnos, den pistas sobre la palabra sin decirla directamente</p>
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <div class="rule-number">3</div>
+                    <div class="rule-content">
+                        <h4>Descubre al impostor</h4>
+                        <p>Voten para eliminar al jugador sospechoso</p>
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <div class="rule-number">4</div>
+                    <div class="rule-content">
+                        <h4>¡Gana!</h4>
+                        <p>Los jugadores ganan si eliminan al impostor, el impostor gana si adivina la palabra</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <footer>
-            <p>Mínimo 3 jugadores para iniciar • Desarrollado con ❤️</p>
-            <div style="margin-top: 15px;">
-                <a href="/words.html" class="btn" style="background: var(--secondary-color); text-decoration: none; display: inline-block;">
-                    📚 Gestionar Palabras
-                </a>
+            <div class="footer-content">
+                <p>💡 <strong>Consejo:</strong> Mínimo 3 jugadores para iniciar una ronda</p>
+                <div class="footer-actions">
+                    <a href="/words.html" class="btn-link">
+                        <span>📚</span> Gestionar Palabras
+                    </a>
+                </div>
+                <p class="footer-credits">Desarrollado con ❤️ • v1.0</p>
             </div>
         </footer>
     </div>

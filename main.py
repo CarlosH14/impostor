@@ -126,7 +126,8 @@ async def create_game(request: CreateGameRequest):
             "players": [player.model_dump()],
             "max_players": request.max_players,
             "current_word": None,
-            "impostor_id": None
+            "impostor_id": None,
+            "round_number": 0
         }
         
         # Usar MongoDB si está disponible, sino memoria
@@ -141,7 +142,8 @@ async def create_game(request: CreateGameRequest):
             game_id=game_id,
             status=GameStatus.WAITING,
             players=[player],
-            max_players=request.max_players
+            max_players=request.max_players,
+            round_number=0
         )
     except Exception as e:
         print(f"❌ Error al crear partida: {str(e)}")
@@ -200,7 +202,8 @@ async def join_game(request: JoinGameRequest):
         game_id=game["game_id"],
         status=game["status"],
         players=players,
-        max_players=game["max_players"]
+        max_players=game["max_players"],
+        round_number=game.get("round_number", 0)
     )
 
 
@@ -261,6 +264,9 @@ async def start_round(request: StartRoundRequest):
             player["hint"] = None
         updated_players.append(player)
     
+    # Incrementar número de ronda
+    new_round_number = game.get("round_number", 0) + 1
+    
     # Actualizar en la base de datos o memoria
     if db is not None:
         db.games.update_one(
@@ -271,7 +277,8 @@ async def start_round(request: StartRoundRequest):
                     "current_word": word,
                     "impostor_id": impostor_id,
                     "players": updated_players,
-                    "hint": hint
+                    "hint": hint,
+                    "round_number": new_round_number
                 }
             }
         )
@@ -281,6 +288,7 @@ async def start_round(request: StartRoundRequest):
         game["impostor_id"] = impostor_id
         game["players"] = updated_players
         game["hint"] = hint
+        game["round_number"] = new_round_number
         games_memory[request.game_id] = game
     
     return {
@@ -359,7 +367,8 @@ async def get_game(game_id: str):
         game_id=game["game_id"],
         status=game["status"],
         players=safe_players,
-        max_players=game["max_players"]
+        max_players=game["max_players"],
+        round_number=game.get("round_number", 0)
     )
 
 
