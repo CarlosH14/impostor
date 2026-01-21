@@ -60,7 +60,7 @@ function showError(message) {
 }
 
 // Manejar nueva ronda
-async function handleNewRound() {
+function handleNewRound() {
     console.log('🔄 Reseteando vista para nueva ronda...');
     
     // Resetear vista de palabra
@@ -77,11 +77,12 @@ async function handleNewRound() {
         hintBox.remove();
     }
     
-    // Mostrar notificación al jugador
-    alert('🎲 ¡Nueva ronda iniciada! Cargando tu nueva palabra...');
+    // Ocultar botones de control hasta que se revele la palabra
+    const gameActions = document.getElementById('gameActions');
+    gameActions.style.display = 'none';
     
-    // Cargar y mostrar automáticamente la nueva palabra
-    await loadAndShowWord();
+    // Mostrar notificación al jugador
+    alert('🎲 ¡Nueva ronda iniciada! Presiona el botón para revelar tu nueva palabra.');
 }
 
 // Función para cargar y mostrar la palabra (reutilizable)
@@ -133,9 +134,12 @@ async function loadAndShowWord() {
             roleTextElement.style.color = '#10b981';
         }
         
-        // Mostrar botones de control si es host
+        // Mostrar botones de control SOLO si es host
+        const gameActions = document.getElementById('gameActions');
         if (isHost) {
-            document.getElementById('gameActions').style.display = 'flex';
+            gameActions.style.display = 'flex';
+        } else {
+            gameActions.style.display = 'none';
         }
         
     } catch (error) {
@@ -214,6 +218,12 @@ async function updateGameState() {
                 `;
                 gamePlayersListElement.appendChild(playerItem);
             });
+            
+            // Mostrar botones de control SOLO si es host
+            const gameActions = document.getElementById('gameActions');
+            if (isHost && wordDisplay.style.display === 'block') {
+                gameActions.style.display = 'flex';
+            }
         }
         
     } catch (error) {

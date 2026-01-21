@@ -839,6 +839,13 @@ footer {
     margin-top: 30px;
     padding-top: 20px;
     border-top: 2px solid var(--border);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.game-actions.hidden {
+    display: none !important;
 }
 
 .game-actions button {
