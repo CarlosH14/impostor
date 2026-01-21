@@ -28,6 +28,7 @@ class JoinGameRequest(BaseModel):
 
 class StartRoundRequest(BaseModel):
     game_id: str
+    player_id: str
 
 
 class GetWordRequest(BaseModel):

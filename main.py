@@ -213,6 +213,7 @@ async def start_round(request: StartRoundRequest):
     Inicia una nueva ronda seleccionando aleatoriamente un impostor
     y asignando palabras a todos los jugadores.
     Siempre usa una palabra aleatoria de la base de datos.
+    Solo el host (primer jugador) puede iniciar una ronda.
     """
     db = await get_database()
     
@@ -227,6 +228,10 @@ async def start_round(request: StartRoundRequest):
     
     if len(game["players"]) < 3:
         raise HTTPException(status_code=400, detail="Se necesitan al menos 3 jugadores")
+    
+    # Verificar que quien inicia la ronda sea el host (primer jugador)
+    if not game["players"] or game["players"][0]["player_id"] != request.player_id:
+        raise HTTPException(status_code=403, detail="Solo el host puede iniciar una nueva ronda")
     
     # Obtener palabra aleatoria de la base de datos
     if db is None:

@@ -60,7 +60,7 @@ function showError(message) {
 }
 
 // Manejar nueva ronda
-function handleNewRound() {
+async function handleNewRound() {
     console.log('🔄 Reseteando vista para nueva ronda...');
     
     // Resetear vista de palabra
@@ -78,7 +78,70 @@ function handleNewRound() {
     }
     
     // Mostrar notificación al jugador
-    alert('🎲 ¡Nueva ronda iniciada! Presiona el botón para revelar tu nueva palabra.');
+    alert('🎲 ¡Nueva ronda iniciada! Cargando tu nueva palabra...');
+    
+    // Cargar y mostrar automáticamente la nueva palabra
+    await loadAndShowWord();
+}
+
+// Función para cargar y mostrar la palabra (reutilizable)
+async function loadAndShowWord() {
+    showLoading();
+    
+    try {
+        const response = await fetch(`${API_URL}/game/get-word`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                game_id: gameId,
+                player_id: playerId
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Error al obtener la palabra');
+        }
+        
+        const data = await response.json();
+        
+        hideLoading();
+        
+        // Mostrar palabra
+        wordReveal.style.display = 'none';
+        wordDisplay.style.display = 'block';
+        
+        playerWordElement.textContent = data.word;
+        
+        if (data.is_impostor) {
+            roleTextElement.textContent = '⚠️ ¡Eres el IMPOSTOR! Descubre cuál es la palabra real sin ser descubierto.';
+            roleTextElement.style.color = '#ef4444';
+            
+            // Mostrar pista si está disponible
+            if (data.hint) {
+                const hintElement = document.createElement('div');
+                hintElement.className = 'hint-box';
+                hintElement.innerHTML = `
+                    <strong>💡 Pista:</strong> ${data.hint}
+                `;
+                wordDisplay.appendChild(hintElement);
+            }
+        } else {
+            roleTextElement.textContent = '✓ Eres un jugador normal. Descubre quién es el impostor.';
+            roleTextElement.style.color = '#10b981';
+        }
+        
+        // Mostrar botones de control si es host
+        if (isHost) {
+            document.getElementById('gameActions').style.display = 'flex';
+        }
+        
+    } catch (error) {
+        hideLoading();
+        showError(error.message);
+    }
 }
 
 // Actualizar estado del juego
@@ -169,7 +232,8 @@ startRoundBtn.addEventListener('click', async () => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                game_id: gameId
+                game_id: gameId,
+                player_id: playerId
             })
         });
         
@@ -189,62 +253,7 @@ startRoundBtn.addEventListener('click', async () => {
 
 // Revelar palabra
 revealWordBtn.addEventListener('click', async () => {
-    showLoading();
-    
-    try {
-        const response = await fetch(`${API_URL}/game/get-word`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                game_id: gameId,
-                player_id: playerId
-            })
-        });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Error al obtener la palabra');
-        }
-        
-        const data = await response.json();
-        
-        hideLoading();
-        
-        // Mostrar palabra
-        wordReveal.style.display = 'none';
-        wordDisplay.style.display = 'block';
-        
-        playerWordElement.textContent = data.word;
-        
-        if (data.is_impostor) {
-            roleTextElement.textContent = '⚠️ ¡Eres el IMPOSTOR! Descubre cuál es la palabra real sin ser descubierto.';
-            roleTextElement.style.color = '#ef4444';
-            
-            // Mostrar pista si está disponible
-            if (data.hint) {
-                const hintElement = document.createElement('div');
-                hintElement.className = 'hint-box';
-                hintElement.innerHTML = `
-                    <strong>💡 Pista:</strong> ${data.hint}
-                `;
-                wordDisplay.appendChild(hintElement);
-            }
-        } else {
-            roleTextElement.textContent = '✓ Eres un jugador normal. Descubre quién es el impostor.';
-            roleTextElement.style.color = '#10b981';
-        }
-        
-        // Mostrar botones de control si es host
-        if (isHost) {
-            document.getElementById('gameActions').style.display = 'flex';
-        }
-        
-    } catch (error) {
-        hideLoading();
-        showError(error.message);
-    }
+    await loadAndShowWord();
 });
 
 // Siguiente Ronda
@@ -264,7 +273,8 @@ if (nextRoundBtn) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    game_id: gameId
+                    game_id: gameId,
+                    player_id: playerId
                 })
             });
             
