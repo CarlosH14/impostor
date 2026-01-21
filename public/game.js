@@ -201,9 +201,14 @@ async function updateGameState() {
         
         // Si el juego está en progreso, cambiar de vista
         if (game.status === 'in_progress') {
-            waitingRoom.style.display = 'none';
-            gameInProgress.style.display = 'block';
-            clearInterval(updateInterval);
+            // Solo cambiar de vista si aún no lo hemos hecho
+            if (waitingRoom.style.display !== 'none') {
+                waitingRoom.style.display = 'none';
+                gameInProgress.style.display = 'block';
+            }
+            
+            // NO detener el polling - necesitamos seguir detectando cambios de ronda
+            // clearInterval(updateInterval); // REMOVIDO para permitir detección de nuevas rondas
             
             // Actualizar lista de jugadores en juego
             gamePlayersListElement.innerHTML = '';
