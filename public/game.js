@@ -79,6 +79,12 @@ function handleNewRound() {
         hintText.remove();
     }
     
+    // Limpiar definición si existe
+    const definitionText = document.querySelector('.definition-text');
+    if (definitionText) {
+        definitionText.remove();
+    }
+    
     // Ocultar botones de control hasta que se revele la palabra
     const gameActions = document.getElementById('gameActions');
     gameActions.style.display = 'none';
@@ -137,6 +143,19 @@ async function loadAndShowWord() {
         } else {
             roleTextElement.textContent = '✓ Eres un jugador normal. Descubre quién es el impostor.';
             roleTextElement.style.color = '#10b981';
+            
+            // Mostrar definición para jugadores normales
+            if (data.definition) {
+                const definitionElement = document.createElement('p');
+                definitionElement.className = 'definition-text';
+                definitionElement.innerHTML = `📖 <strong>Definición:</strong> ${data.definition}`;
+                definitionElement.style.cssText = 'margin-top: 10px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; border-radius: 4px; font-size: 0.95em;';
+                
+                // Insertar después del h3 de la palabra
+                const wordCard = document.querySelector('.word-card');
+                const h3 = wordCard.querySelector('h3');
+                h3.insertAdjacentElement('afterend', definitionElement);
+            }
         }
         
         // Mostrar botones de control SOLO si es host

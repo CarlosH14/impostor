@@ -8,16 +8,21 @@
 </head>
 <body>
     <div class="container">
+        <!-- Indicador de Ronda Grande -->
+        <div class="round-indicator-big" id="roundIndicator" style="display: none;">
+            <div class="round-content">
+                <span class="round-icon">🔄</span>
+                <span class="round-label">RONDA</span>
+                <span class="round-number-big" id="roundNumber">0</span>
+            </div>
+        </div>
+        
         <header>
             <h1>🎮 Sala de Juego</h1>
             <div class="game-code">
                 <span>Código: </span>
                 <strong id="gameCode">-</strong>
                 <button id="copyCodeBtn" class="btn-icon" title="Copiar código">📋</button>
-            </div>
-            <div class="round-indicator" id="roundIndicator" style="display: none;">
-                <span>🔄 Ronda: </span>
-                <strong id="roundNumber">0</strong>
             </div>
         </header>
 

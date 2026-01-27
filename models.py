@@ -51,12 +51,14 @@ class PlayerWordResponse(BaseModel):
     word: str
     is_impostor: bool
     hint: Optional[str] = None  # Pista para el impostor
+    definition: Optional[str] = None  # Definición para jugadores normales
 
 
 class Word(BaseModel):
     word_id: Optional[str] = None
     word: str
     hint: str  # Pista para ayudar al impostor
+    definition: Optional[str] = None  # Definición para jugadores normales
     category: Optional[str] = None
     difficulty: Optional[str] = "medium"  # easy, medium, hard
 
@@ -64,6 +66,7 @@ class Word(BaseModel):
 class CreateWordRequest(BaseModel):
     word: str
     hint: str
+    definition: Optional[str] = None
     category: Optional[str] = None
     difficulty: Optional[str] = "medium"
 
@@ -72,5 +75,6 @@ class WordResponse(BaseModel):
     word_id: str
     word: str
     hint: str
+    definition: Optional[str] = None
     category: Optional[str] = None
     difficulty: str

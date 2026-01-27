@@ -246,6 +246,7 @@ async def start_round(request: StartRoundRequest):
     word_data = words[0]
     word = word_data["word"]
     hint = word_data["hint"]
+    definition = word_data.get("definition", None)
     
     # Seleccionar impostor aleatoriamente (asegurar aleatoriedad)
     players_list = game["players"].copy()
@@ -263,10 +264,12 @@ async def start_round(request: StartRoundRequest):
             player["word"] = "IMPOSTOR"
             player["is_impostor"] = True
             player["hint"] = hint  # Guardar pista para el impostor
+            player["definition"] = None
         else:
             player["word"] = word
             player["is_impostor"] = False
             player["hint"] = None
+            player["definition"] = definition  # Guardar definición para jugadores normales
         updated_players.append(player)
     
     # Incrementar número de ronda
@@ -331,15 +334,17 @@ async def get_word(request: GetWordRequest):
     if not player:
         raise HTTPException(status_code=404, detail="Jugador no encontrado")
     
-    # Incluir pista solo si es impostor
+    # Incluir pista solo si es impostor, definición solo si NO es impostor
     hint = player.get("hint") if player["is_impostor"] else None
+    definition = player.get("definition") if not player["is_impostor"] else None
     
     return PlayerWordResponse(
         player_id=player["player_id"],
         player_name=player["name"],
         word=player["word"],
         is_impostor=player["is_impostor"],
-        hint=hint
+        hint=hint,
+        definition=definition
     )
 
 
