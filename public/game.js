@@ -29,6 +29,8 @@ const playerWordElement = document.getElementById('playerWord');
 const roleTextElement = document.getElementById('roleText');
 const gamePlayersListElement = document.getElementById('gamePlayersList');
 const loadingModal = document.getElementById('loadingModal');
+const roundIndicator = document.getElementById('roundIndicator');
+const roundNumber = document.getElementById('roundNumber');
 
 // Verificar que tengamos los datos necesarios
 if (!gameId || !playerId || !playerName) {
@@ -72,9 +74,9 @@ function handleNewRound() {
     roleTextElement.textContent = '';
     
     // Limpiar pista si existe
-    const hintBox = wordDisplay.querySelector('.hint-box');
-    if (hintBox) {
-        hintBox.remove();
+    const hintText = document.querySelector('.hint-text');
+    if (hintText) {
+        hintText.remove();
     }
     
     // Ocultar botones de control hasta que se revele la palabra
@@ -120,14 +122,17 @@ async function loadAndShowWord() {
             roleTextElement.textContent = '⚠️ ¡Eres el IMPOSTOR! Descubre cuál es la palabra real sin ser descubierto.';
             roleTextElement.style.color = '#ef4444';
             
-            // Mostrar pista si está disponible
+            // Mostrar pista justo debajo de la palabra impostor
             if (data.hint) {
-                const hintElement = document.createElement('div');
-                hintElement.className = 'hint-box';
-                hintElement.innerHTML = `
-                    <strong>💡 Pista:</strong> ${data.hint}
-                `;
-                wordDisplay.appendChild(hintElement);
+                const hintElement = document.createElement('p');
+                hintElement.className = 'hint-text';
+                hintElement.innerHTML = `💡 <strong>Pista:</strong> ${data.hint}`;
+                hintElement.style.cssText = 'margin-top: 10px; padding: 10px; background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24; border-radius: 4px; font-size: 0.95em;';
+                
+                // Insertar después del h3 de la palabra
+                const wordCard = document.querySelector('.word-card');
+                const h3 = wordCard.querySelector('h3');
+                h3.insertAdjacentElement('afterend', hintElement);
             }
         } else {
             roleTextElement.textContent = '✓ Eres un jugador normal. Descubre quién es el impostor.';
@@ -165,6 +170,14 @@ async function updateGameState() {
             handleNewRound();
         }
         currentRoundNumber = game.round_number;
+        
+        // Actualizar indicador de ronda
+        if (game.round_number > 0) {
+            roundIndicator.style.display = 'flex';
+            roundNumber.textContent = game.round_number;
+        } else {
+            roundIndicator.style.display = 'none';
+        }
         
         // Actualizar contador de jugadores
         currentPlayersElement.textContent = game.players.length;

@@ -54,6 +54,41 @@
         <main class="main-menu">
             <!-- Cards mejoradas con iconos más grandes -->
             <div class="card game-mode-card">
+                <div class="card-icon">🚪</div>
+                <h2>Unirse a Partida</h2>
+                <p class="card-description">¿Ya tienes un código? Únete a la diversión</p>
+                <form id="joinGameForm">
+                    <div class="form-group">
+                        <label for="playerName">
+                            <span class="label-icon">👤</span>
+                            Tu Nombre
+                        </label>
+                        <input type="text" id="playerName" placeholder="Ej: Ana" required maxlength="20">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gameId">
+                            <span class="label-icon">🔑</span>
+                            Código de Partida
+                        </label>
+                        <input 
+                            type="text" 
+                            id="gameId" 
+                            placeholder="Ej: ABC123" 
+                            required
+                            style="text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
+                    </div>
+                    <button type="submit" class="btn btn-secondary">
+                        <span>🎮</span> Unirse Ahora
+                    </button>
+                </form>
+            </div>
+
+            <div class="divider-modern">
+                <span>O</span>
+            </div>
+
+            <div class="card game-mode-card">
                 <div class="card-icon">🎯</div>
                 <h2>Crear Nueva Partida</h2>
                 <p class="card-description">Inicia una nueva sesión y comparte el código con tus amigos</p>
@@ -81,41 +116,6 @@
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <span>🚀</span> Crear Partida
-                    </button>
-                </form>
-            </div>
-
-            <div class="divider-modern">
-                <span>O</span>
-            </div>
-
-            <div class="card game-mode-card">
-                <div class="card-icon">🚪</div>
-                <h2>Unirse a Partida</h2>
-                <p class="card-description">¿Ya tienes un código? Únete a la diversión</p>
-                <form id="joinGameForm">
-                    <div class="form-group">
-                        <label for="playerName">
-                            <span class="label-icon">👤</span>
-                            Tu Nombre
-                        </label>
-                        <input type="text" id="playerName" placeholder="Ej: Ana" required maxlength="20">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="gameId">
-                            <span class="label-icon">🔑</span>
-                            Código de Partida
-                        </label>
-                        <input 
-                            type="text" 
-                            id="gameId" 
-                            placeholder="Ej: ABC123" 
-                            required
-                            style="text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
-                    </div>
-                    <button type="submit" class="btn btn-secondary">
-                        <span>🎮</span> Unirse Ahora
                     </button>
                 </form>
             </div>
