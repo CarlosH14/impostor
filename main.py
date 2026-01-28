@@ -247,6 +247,7 @@ async def start_round(request: StartRoundRequest):
     word = word_data["word"]
     hint = word_data["hint"]
     definition = word_data.get("definition", None)
+    image = word_data.get("image", None)
     
     # Seleccionar impostor aleatoriamente (asegurar aleatoriedad)
     players_list = game["players"].copy()
@@ -265,11 +266,13 @@ async def start_round(request: StartRoundRequest):
             player["is_impostor"] = True
             player["hint"] = hint  # Guardar pista para el impostor
             player["definition"] = None
+            player["image"] = None
         else:
             player["word"] = word
             player["is_impostor"] = False
             player["hint"] = None
             player["definition"] = definition  # Guardar definición para jugadores normales
+            player["image"] = image  # Guardar imagen para jugadores normales
         updated_players.append(player)
     
     # Incrementar número de ronda
@@ -380,6 +383,69 @@ async def get_game(game_id: str):
         max_players=game["max_players"],
         round_number=game.get("round_number", 0)
     )
+
+
+@app.get("/game/{game_id}/word/{player_id}", response_model=PlayerWordResponse)
+async def get_player_word(game_id: str, player_id: str):
+    """
+    Obtiene la palabra asignada a un jugador específico.
+    Los impostores ven la pista, los jugadores normales ven la definición e imagen.
+    """
+    db = await get_database()
+
+    # Buscar en MongoDB o memoria
+    if db is not None:
+        game = db.games.find_one({"game_id": game_id})
+    else:
+        game = games_memory.get(game_id)
+
+    if not game:
+        raise HTTPException(status_code=404, detail="Partida no encontrada")
+
+    if game["status"] != GameStatus.IN_PROGRESS:
+        raise HTTPException(status_code=400, detail="La partida no está en progreso")
+
+    # Buscar al jugador
+    player = None
+    for p in game["players"]:
+        if p["player_id"] == player_id:
+            player = p
+            break
+
+    if not player:
+        raise HTTPException(status_code=404, detail="Jugador no encontrado")
+
+    # Obtener información de la palabra desde la base de datos
+    word_info = None
+    if db is not None and game.get("current_word"):
+        word_doc = db.words.find_one({"word": game["current_word"]})
+        if word_doc:
+            word_info = word_doc
+
+    # Preparar respuesta según el rol del jugador
+    response = PlayerWordResponse(
+        player_id=player["player_id"],
+        player_name=player["name"],
+        word=player["word"],
+        is_impostor=player["is_impostor"]
+    )
+
+    if player["is_impostor"]:
+        # Impostor ve la pista
+        response.hint = game.get("hint", "Adivina la palabra")
+        response.definition = None
+        response.image = None
+    else:
+        # Jugadores normales ven definición e imagen
+        response.hint = None
+        if word_info:
+            response.definition = word_info.get("definition")
+            response.image = word_info.get("image")
+        else:
+            response.definition = "Definición no disponible"
+            response.image = None
+
+    return response
 
 
 @app.delete("/game/{game_id}")

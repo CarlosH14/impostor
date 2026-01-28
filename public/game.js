@@ -85,6 +85,12 @@ function handleNewRound() {
         definitionText.remove();
     }
     
+    // Limpiar imagen si existe
+    const imageContainer = document.querySelector('.word-image-container');
+    if (imageContainer) {
+        imageContainer.remove();
+    }
+    
     // Ocultar botones de control hasta que se revele la palabra
     const gameActions = document.getElementById('gameActions');
     gameActions.style.display = 'none';
@@ -98,16 +104,7 @@ async function loadAndShowWord() {
     showLoading();
     
     try {
-        const response = await fetch(`${API_URL}/game/get-word`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                game_id: gameId,
-                player_id: playerId
-            })
-        });
+        const response = await fetch(`${API_URL}/game/${gameId}/word/${playerId}`);
         
         if (!response.ok) {
             const error = await response.json();
@@ -155,6 +152,19 @@ async function loadAndShowWord() {
                 const wordCard = document.querySelector('.word-card');
                 const h3 = wordCard.querySelector('h3');
                 h3.insertAdjacentElement('afterend', definitionElement);
+                
+                // Mostrar imagen justo después de la definición (solo para no impostores)
+                if (data.image) {
+                    const imageElement = document.createElement('div');
+                    imageElement.className = 'word-image-container';
+                    imageElement.innerHTML = `
+                        <img src="${data.image}" alt="Imagen de ${data.word}" class="word-image" 
+                             style="max-width: 100%; height: auto; border-radius: 8px; margin-top: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    `;
+                    
+                    // Insertar después de la definición
+                    definitionElement.insertAdjacentElement('afterend', imageElement);
+                }
             }
         }
         
